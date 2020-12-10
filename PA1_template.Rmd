@@ -8,18 +8,100 @@ output:
 
 ## Loading and preprocessing the data
 
+```{r echo=TRUE}
+unzip(zipfile="activity.zip")
+activity <-read.csv("activity.csv")
+```
+
+## What is mean total number of steps taken per day?
 
 
-## What is mean total number of steps taken per day??
+```{r echo=TRUE}
+stepsPerDay <-tapply(activity$steps, activity$date, sum, na.rm=TRUE)
+stepsPerDay
+```
+
+
+```{r echo=TRUE}
+hist(stepsPerDay, xlab="Number of Steps", main="Total number of steps taken each day")
+```
+
+
+```{r echo=TRUE}
+median(stepsPerDay)
+mean(stepsPerDay)
+```
+
+The mean and median of the total number of steps taken per day are 9354.23 and 10395, respectively. 
+
 
 
 
 ## What is the average daily activity pattern?
 
+```{r echo=TRUE}
+averagePerDay <-tapply(activity$steps, activity$interval, mean, na.rm=TRUE)
+plot(averagePerDay, xlab="5-Minute Interval", ylab = "Average Number of Steps", type="l", main="Average Number of steps taken Per Day Per 5-Minute Interval")
+```
 
+
+
+```{r}
+names(which.max(averagePerDay))
+```
+
+The 835th interval contains the maximum number of steps. 
 
 ## Imputing missing values
+
+```{r}
+sum(is.na(activity))
+```
+
+There are 2304 missing values in the dataset.
+
+
+```{r}
+meaninterval <-aggregate(steps~interval, activity, FUN=mean)
+activityNew <-merge(activity, meaninterval, by="interval")
+activityNew$steps <-ifelse(is.na(activityNew$steps.x), activityNew$steps.y, activityNew$steps.x)
+activityNew <-activityNew[,c(1,3,5)]
+head(activityNew)
+```
+
+                        
+
+```{r}
+stepsPerDayN <-tapply(activityNew$steps, activityNew$date, sum, na.rm=TRUE)
+hist(stepsPerDayN, xlab="Number of Steps", main="Total number of steps taken each day")
+
+median(stepsPerDayN)
+mean(stepsPerDayN)
+```
+
+The mean and median for the total number of steps taken per day for the new data set are both 10766.19. These are slightly higher than the estiamtes found using the data set with missing values. As the mean was used to imput missing data, using the median or other methods may yield different results. 
 
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+
+```{r}
+activityNew$date <-as.Date(activityNew$date)
+weekend <- c('Sat', 'Sun')
+activityNew$day <- factor((weekdays(activityNew$date, TRUE) %in% weekend), levels=c(FALSE, TRUE), labels=c('weekday', 'weekend'))
+head(activityNew)
+```
+
+
+```{r}
+library(ggplot2)
+
+aggregateData<- aggregate(steps ~ interval + day, data=activityNew, mean)
+ggplot(aggregateData, aes(interval, steps)) + 
+        geom_line() +
+        facet_grid(day ~ .) +
+        xlab("5-Minute Interval") + 
+        ylab("Average number of steps")
+```
+
