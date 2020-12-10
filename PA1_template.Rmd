@@ -105,3 +105,4 @@ ggplot(aggregateData, aes(interval, steps)) +
         ylab("Average number of steps")
 ```
 
+The activity patterns for weekdays and weekends are very smiliar. However, the peak for weekdays is much higher than for the weekend. 
